@@ -4,6 +4,10 @@ project (Example1)
 
 include_directories(${SDL_INCLUDE_DIR})
 
-link_libraries (${SDL_LIBRARY} SDLmain GLEW)
+link_libraries (
+    ${PLATFORM_LIBS}
+    ${SDL_LIBRARY} SDLMain
+    ${OPENGL_LIBS}
+)
 
 add_executable(Example1 main.cpp)
