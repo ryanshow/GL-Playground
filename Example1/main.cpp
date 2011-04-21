@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <SDL.h>
 #include <GL/glew.h>
 
@@ -37,6 +39,8 @@ int main(int argc, char **argv) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
+    glClearColor(0.1, 0.1, 0.1, 1.0);
+
     // The main game loop
     bool running = true;
     SDL_Event event;
@@ -60,6 +64,7 @@ int main(int argc, char **argv) {
             }
         }
 
+        glClear(GL_COLOR_BUFFER_BIT);
         SDL_GL_SwapWindow(main_window);
         SDL_Delay(10);
     }
