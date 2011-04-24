@@ -21,4 +21,24 @@ if (UNIX)
     set (OPENGL_LIBS GLEW GL GLU)
 endif()
 
+include_directories ("${PROJECT_SOURCE_DIR}/common")
+
+set (
+    COMMON_SOURCE_FILES
+    common/shader_util.cpp
+)
+
+set (
+    COMMON_HEADER_FILES
+    common/shader_util.h
+)
+
+file (
+    COPY shaders
+    DESTINATION ./
+)
+
+add_library (GLPlayground STATIC ${COMMON_SOURCE_FILES} ${COMMON_HEADER_FILES})
+
 add_subdirectory(Example1)
+add_subdirectory(Example2)
