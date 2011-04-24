@@ -22,6 +22,7 @@ if (UNIX)
 endif()
 
 include_directories ("${PROJECT_SOURCE_DIR}/common")
+include_directories ("${PROJECT_SOURCE_DIR}")
 
 set (
     COMMON_SOURCE_FILES

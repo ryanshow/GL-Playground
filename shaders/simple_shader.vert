@@ -8,3 +8,4 @@ in vec3 Vertex;
 void main(void) {
     gl_Position = Projection * ((Model * View) * vec4(Vertex, 1.0));
 }
+

@@ -1,11 +1,15 @@
 #include <iostream>
+#include <vector>
 
 #include <SDL.h>
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "shader_util.h"
+#include "vertex.h"
 
 namespace {
     SDL_Window *main_window;
@@ -13,6 +17,7 @@ namespace {
 
     glm::mat4 projection_matrix;
     glm::mat4 view_matrix;
+    glm::mat4 model_matrix;
 }
 
 void initWindow(int win_x, int win_y) {
@@ -54,6 +59,11 @@ void initWindow(int win_x, int win_y) {
     glDepthFunc(GL_LEQUAL);
 
     glClearColor(0.1, 0.1, 0.1, 1.0);
+
+    model_matrix = glm::mat4(1.0f);
+    model_matrix = glm::rotate(model_matrix, 0.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    model_matrix = glm::translate(model_matrix, glm::vec3(0.2f, 0.0f, 0.0f));
+    model_matrix = glm::scale(model_matrix, glm::vec3(1.0f, 1.0f, 1.0f));
 }
 
 void updateWindow() {
@@ -65,7 +75,7 @@ void updateWindow() {
 
     SDL_GetWindowSize(main_window, &win_x, &win_y);
 
-    glViewPort(0, 0, win_x, win_y);
+    glViewport(0, 0, win_x, win_y);
 
     projection_matrix = glm::mat4(1.0f);
     projection_matrix *= glm::perspective(45.0f, 4.0f/3.0f, 0.1f, 100.0f);
@@ -82,6 +92,22 @@ int main(int argc, char **argv) {
 
     initWindow(640, 480);
 
+    std::vector<Vertex> vert_list;
+    std::vector<GLushort> index_list;
+
+    Vertex v1, v2, v3;
+    v1.x = 0.0f; v1.y = 0.0f; v1.z = 0.0f;
+    v2.x = 0.0f; v2.y = 0.3f; v2.z = 0.0f;
+    v3.x = 0.3f; v3.y = 0.3f; v3.z = 0.0f;
+
+    vert_list.push_back(v1);
+    vert_list.push_back(v2);
+    vert_list.push_back(v3);
+
+    index_list.push_back(0);
+    index_list.push_back(1);
+    index_list.push_back(2);
+
     GLuint vao, vbo_vertices, vbo_indices;
     GLhandleARB shader_program;
 
@@ -92,32 +118,56 @@ int main(int argc, char **argv) {
     // Create a vertex buffer object for this entity
     glGenBuffers(1, &vbo_vertices);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_vertices);
-    glBufferData(GL_ARRAY_BUFFER, SIZE_OF_ARRAY, FIRST_INDEX, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vert_list.size(), &(vert_list)[0], GL_STATIC_DRAW);
 
-    // Set up vertex attributes
+    // Set up the vertex attribute for the vertex position (xyz)
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, x));
 
     // Create an index buffer object for the cube
     glGenBuffers(1, &vbo_indices);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, SIZE_OF_ARRAY, FIRST_INDEX, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Vertex)*index_list.size(), &(index_list)[0], GL_STATIC_DRAW);
 
-    // Load the shader resources
-    vert_shader = bleh;
-    frag_shader = bleh;
+    shader_program = glCreateProgramObjectARB();
 
-    glAttachObjectARB(shader_program, vert_shader_id);
-    glAttachObjectARB(shader_program, frag_shader_id);
-
-    glBindFragDataLocation(shader_program, 0, "FragColor");
-    glBindAttribLocation(shader_program, 0, "Vertex");
-
-    glLinkProgram(shader_program);
+    // Create the shader objects
+    GLuint vert_shader_id = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+    GLuint frag_shader_id = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
 
     const char* vert_shader_source = loadShader("shaders/simple_shader.vert");
     const char* frag_shader_source = loadShader("shaders/simple_shader.frag");
 
+    // Assign the shader source files to the shader objects
+    glShaderSource(vert_shader_id, 1, &vert_shader_source, NULL);
+    glShaderSource(frag_shader_id, 1, &frag_shader_source, NULL);
+
+    // Compile the source files
+    glCompileShader(vert_shader_id);
+    glCompileShader(frag_shader_id);
+
+    glBindAttribLocation(shader_program, 0, "Vertex");
+    glBindFragDataLocation(shader_program, GL_DRAW_BUFFER0, "FragColor");
+
+    // Attach the vert/frag shader objects to the shader program
+    glAttachObjectARB(shader_program, vert_shader_id);
+    glAttachObjectARB(shader_program, frag_shader_id);
+
+    glLinkProgram(shader_program);
+
+    // Check to see if there were any errors in compiling the shaders 
+    int infologLength = 0;
+    glGetObjectParameterivARB(shader_program, GL_OBJECT_INFO_LOG_LENGTH_ARB, &infologLength);
+
+    // If there were errors, write them to glslinfo.txt
+    if (infologLength > 0) {
+        int charsWritten = 0;
+        char *infoLog;
+        infoLog = new char[infologLength];
+        glGetInfoLogARB(shader_program, infologLength, &charsWritten, infoLog);
+        std::cout << infoLog << std::endl;
+        delete [] infoLog;
+    }   
 
     // The main game loop
     bool running = true;
@@ -142,7 +192,29 @@ int main(int argc, char **argv) {
             }
         }
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        updateWindow();
+
+        glUniformMatrix4fv(
+                glGetUniformLocation(shader_program, "View"),
+                1,  
+                false,
+                glm::value_ptr(view_matrix));
+
+        glUniformMatrix4fv(
+                glGetUniformLocation(shader_program, "Projection"),
+                1,  
+                false,
+                glm::value_ptr(projection_matrix));
+
+        glUniformMatrix4fv(
+                glGetUniformLocation(shader_program, "Model"),
+                1,  
+                false,
+                glm::value_ptr(model_matrix));
+
+        glBindVertexArray(vao);
+        glUseProgramObjectARB(shader_program);
+        glDrawElements(GL_TRIANGLES, index_list.size(), GL_UNSIGNED_SHORT, (void*)0);
         SDL_GL_SwapWindow(main_window);
         SDL_Delay(10);
     }

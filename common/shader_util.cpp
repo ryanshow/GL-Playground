@@ -13,11 +13,9 @@ const char* loadShader(const char* file_name) {
 
     file.open(file_name);
 
-    std::cout << "Reading " << file_name << std::endl;
     if (file.is_open()) {
         file_content_stream << file.rdbuf();
         file_content = file_content_stream.str();
-        std::cout << file_content << std::endl;
         file.close();
     }
 
