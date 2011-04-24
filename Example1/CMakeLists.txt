@@ -6,7 +6,7 @@ include_directories(${SDL_INCLUDE_DIR})
 
 link_libraries (
     ${PLATFORM_LIBS}
-    ${SDL_LIBRARY} SDLMain
+    ${SDL_LIBRARY} SDLmain
     ${OPENGL_LIBS}
 )
 
