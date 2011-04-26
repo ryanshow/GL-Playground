@@ -205,6 +205,10 @@ int main(int argc, char **argv) {
         delete [] infoLog;
     } 
 
+    // Delete our shader source files since we no longer need them
+    delete [] vert_shader_source;
+    delete [] frag_shader_source;
+
     // The main game loop
     bool running = true;
     SDL_Event event;
@@ -268,6 +272,18 @@ int main(int argc, char **argv) {
         // Pause the application for a few milliseconds
         SDL_Delay(10);
     }
+
+    // Clean up the stuff we created
+    glUseProgramObjectARB(shader_program);
+    glDisableVertexAttribArray(0);
+    glDetachShader(shader_program, vert_shader_id);
+    glDetachShader(shader_program, frag_shader_id);
+    glDeleteProgram(shader_program);
+    glDeleteShader(vert_shader_id);
+    glDeleteShader(frag_shader_id);
+    glDeleteBuffers(1, &vbo_vertices);
+    glDeleteBuffers(1, &vbo_indices);
+    glDeleteVertexArrays(1, &vao);
 
     //Deinit SDL
     SDL_GL_DeleteContext(main_context);
