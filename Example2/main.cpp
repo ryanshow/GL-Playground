@@ -82,9 +82,11 @@ void updateWindow() {
 
     view_matrix = glm::mat4(1.0f);
     view_matrix *= glm::lookAt(
-            glm::vec3(0.0, 1.0f, 1.0f),
+            glm::vec3(1.0, 3.0f, 5.0f),
             glm::vec3(0.0f, 0.0f, 0.0f),
             glm::vec3(0.0f, 1.0f, 0.0f));
+
+    model_matrix = glm::rotate(model_matrix, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 
@@ -95,18 +97,34 @@ int main(int argc, char **argv) {
     std::vector<Vertex> vert_list;
     std::vector<GLushort> index_list;
 
-    Vertex v1, v2, v3;
-    v1.x = 0.0f; v1.y = 0.0f; v1.z = 0.0f;
-    v2.x = 0.0f; v2.y = 0.3f; v2.z = 0.0f;
-    v3.x = 0.3f; v3.y = 0.3f; v3.z = 0.0f;
+    Vertex v0, v1, v2, v3, v4, v5, v6, v7;
+    v0.x = -0.5f; v0.y =  0.5f; v0.z =  0.5f; vert_list.push_back(v0);
+    v1.x =  0.5f; v1.y =  0.5f; v1.z =  0.5f; vert_list.push_back(v1);
+    v2.x =  0.5f; v2.y = -0.5f; v2.z =  0.5f; vert_list.push_back(v2);
+    v3.x = -0.5f; v3.y = -0.5f; v3.z =  0.5f; vert_list.push_back(v3);
 
-    vert_list.push_back(v1);
-    vert_list.push_back(v2);
-    vert_list.push_back(v3);
+    v4.x = -0.5f; v4.y =  0.5f; v4.z = -0.5f; vert_list.push_back(v4);
+    v5.x =  0.5f; v5.y =  0.5f; v5.z = -0.5f; vert_list.push_back(v5);
+    v6.x =  0.5f; v6.y = -0.5f; v6.z = -0.5f; vert_list.push_back(v6);
+    v7.x = -0.5f; v7.y = -0.5f; v7.z = -0.5f; vert_list.push_back(v7);
 
-    index_list.push_back(0);
-    index_list.push_back(1);
-    index_list.push_back(2);
+    index_list.push_back(0); index_list.push_back(1); index_list.push_back(2); // Front Face Tri 1
+    index_list.push_back(2); index_list.push_back(3); index_list.push_back(0); // Front Face Tri 2
+    
+    index_list.push_back(1); index_list.push_back(5); index_list.push_back(6); // Right Face Tri 1
+    index_list.push_back(6); index_list.push_back(2); index_list.push_back(1); // Right Face Tri 2
+
+    index_list.push_back(5); index_list.push_back(4); index_list.push_back(7); // Back Face Tri 1
+    index_list.push_back(7); index_list.push_back(6); index_list.push_back(5); // Back Face Tri 2
+
+    index_list.push_back(4); index_list.push_back(0); index_list.push_back(3); // Left Face Tri 1
+    index_list.push_back(3); index_list.push_back(7); index_list.push_back(4); // Left Face Tri 2
+
+    index_list.push_back(4); index_list.push_back(5); index_list.push_back(1); // Top Face Tri 1
+    index_list.push_back(1); index_list.push_back(0); index_list.push_back(4); // Top Face Tri 2
+
+    index_list.push_back(3); index_list.push_back(2); index_list.push_back(6); // Bottom Face Tri 1
+    index_list.push_back(6); index_list.push_back(7); index_list.push_back(3); // Bottom Face Tri 2
 
     GLuint vao, vbo_vertices, vbo_indices;
     GLhandleARB shader_program;
@@ -167,7 +185,7 @@ int main(int argc, char **argv) {
         glGetInfoLogARB(shader_program, infologLength, &charsWritten, infoLog);
         std::cout << infoLog << std::endl;
         delete [] infoLog;
-    }   
+    } 
 
     // The main game loop
     bool running = true;
@@ -214,7 +232,7 @@ int main(int argc, char **argv) {
 
         glBindVertexArray(vao);
         glUseProgramObjectARB(shader_program);
-        glDrawElements(GL_TRIANGLES, index_list.size(), GL_UNSIGNED_SHORT, (void*)0);
+        glDrawElements(GL_LINE_LOOP, index_list.size(), GL_UNSIGNED_SHORT, (void*)0);
         SDL_GL_SwapWindow(main_window);
         SDL_Delay(10);
     }

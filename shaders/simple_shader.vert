@@ -6,6 +6,6 @@ uniform mat4 Projection;
 in vec3 Vertex;
 
 void main(void) {
-    gl_Position = Projection * ((Model * View) * vec4(Vertex, 1.0));
+    gl_Position = Projection * ((View * Model) * vec4(Vertex, 1.0));
 }
 
