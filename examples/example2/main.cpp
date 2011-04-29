@@ -167,8 +167,8 @@ int main(int argc, char **argv) {
     GLuint frag_shader_id = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
 
     // Load the source for our vert/frag shader
-    const char* vert_shader_source = loadShader("shaders/simple_shader.vert");
-    const char* frag_shader_source = loadShader("shaders/simple_shader.frag");
+    const char* vert_shader_source = loadShader("data/shaders/simple_shader.vert");
+    const char* frag_shader_source = loadShader("data/shaders/simple_shader.frag");
 
     // Assign the shader source files to the shader objects
     glShaderSource(vert_shader_id, 1, &vert_shader_source, NULL);

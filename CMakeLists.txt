@@ -4,11 +4,19 @@ project (GLPlayground)
 
 find_package (SDL REQUIRED)
 
-add_definitions (-DSDL_NO_COMPAT -DGLEW_STATIC)
+add_definitions (-DSDL_NO_COMPAT)
+
+include_directories ("${PROJECT_SOURCE_DIR}/common/include")
+include_directories ("${PROJECT_SOURCE_DIR}/extern/glm/include")
+include_directories ("${PROJECT_SOURCE_DIR}/extern/glew/include")
+include_directories ("${PROJECT_SOURCE_DIR}/extern/lodepng/include")
+
+add_subdirectory (extern/glew)
+add_subdirectory (extern/lodepng)
 
 if (WIN32)
     set (PLATFORM_LIBS msvcrt.lib msimg32.lib version.lib winmm.lib imm32.lib)
-    set (OPENGL_LIBS glew32 opengl32 glu32)
+    set (OPENGL_LIBS opengl32 glu32)
 endif (WIN32)
 
 if (MSYS)
@@ -18,11 +26,10 @@ if (MSYS)
 endif (MSYS)
 
 if (UNIX)
-    set (OPENGL_LIBS GLEW GL GLU)
+    set (OPENGL_LIBS GL GLU)
 endif()
 
-include_directories ("${PROJECT_SOURCE_DIR}/common")
-include_directories ("${PROJECT_SOURCE_DIR}")
+set (OPENGL_LIBS ${OPENGL_LIBS} glew)
 
 set (
     COMMON_SOURCE_FILES
@@ -31,15 +38,16 @@ set (
 
 set (
     COMMON_HEADER_FILES
-    common/shader_util.h
+    common/include/shader_util.h
 )
 
 file (
-    COPY shaders
+    COPY data
     DESTINATION ./
 )
 
+include_directories (${SDL_INCLUDE_DIR})
+
 add_library (GLPlayground STATIC ${COMMON_SOURCE_FILES} ${COMMON_HEADER_FILES})
 
-add_subdirectory(Example1)
-add_subdirectory(Example2)
+add_subdirectory(examples)
