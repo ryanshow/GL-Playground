@@ -8,6 +8,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "lodepng.h"
+
 #include "shader_util.h"
 #include "vertex.h"
 
@@ -74,7 +76,7 @@ void initWindow(int win_x, int win_y) {
     // Initialize our view matrix, essentially the camera or "eye" orientation in space
     view_matrix = glm::mat4(1.0f);
     view_matrix *= glm::lookAt(
-            glm::vec3(1.0, 3.0f, 5.0f),    // The eye's position in 3d space
+            glm::vec3(1.0, 0.0f, 3.0f),    // The eye's position in 3d space
             glm::vec3(0.0f, 0.0f, 0.0f),   // What the eye is looking at
             glm::vec3(0.0f, 1.0f, 0.0f));  // The eye's orientation vector (which way is up)
 
@@ -93,7 +95,7 @@ void updateWindow() {
     glViewport(0, 0, win_x, win_y);
 
     // Apply a slight rotation to our cube's model matrix
-    model_matrix = glm::rotate(model_matrix, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    model_matrix = glm::rotate(model_matrix, 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 
@@ -108,15 +110,15 @@ int main(int argc, char **argv) {
 
     // The cube's vertices
     Vertex v0, v1, v2, v3, v4, v5, v6, v7;
-    v0.x = -0.5f; v0.y =  0.5f; v0.z =  0.5f; vert_list.push_back(v0);
-    v1.x =  0.5f; v1.y =  0.5f; v1.z =  0.5f; vert_list.push_back(v1);
-    v2.x =  0.5f; v2.y = -0.5f; v2.z =  0.5f; vert_list.push_back(v2);
-    v3.x = -0.5f; v3.y = -0.5f; v3.z =  0.5f; vert_list.push_back(v3);
+    v0.x = -0.5f; v0.y =  0.5f; v0.z =  0.5f; v0.u0 = 0.0f; v0.v0 = 1.0f; vert_list.push_back(v0);
+    v1.x =  0.5f; v1.y =  0.5f; v1.z =  0.5f; v1.u0 = 1.0f; v1.v0 = 1.0f; vert_list.push_back(v1);
+    v2.x =  0.5f; v2.y = -0.5f; v2.z =  0.5f; v2.u0 = 1.0f; v2.v0 = 0.0f; vert_list.push_back(v2);
+    v3.x = -0.5f; v3.y = -0.5f; v3.z =  0.5f; v3.u0 = 0.0f; v3.v0 = 0.0f; vert_list.push_back(v3);
 
-    v4.x = -0.5f; v4.y =  0.5f; v4.z = -0.5f; vert_list.push_back(v4);
-    v5.x =  0.5f; v5.y =  0.5f; v5.z = -0.5f; vert_list.push_back(v5);
-    v6.x =  0.5f; v6.y = -0.5f; v6.z = -0.5f; vert_list.push_back(v6);
-    v7.x = -0.5f; v7.y = -0.5f; v7.z = -0.5f; vert_list.push_back(v7);
+    v4.x = -0.5f; v4.y =  0.5f; v4.z = -0.5f; v4.u0 = 1.0f; v4.v0 = 1.0f; vert_list.push_back(v4);
+    v5.x =  0.5f; v5.y =  0.5f; v5.z = -0.5f; v5.u0 = 0.0f; v5.v0 = 1.0f; vert_list.push_back(v5);
+    v6.x =  0.5f; v6.y = -0.5f; v6.z = -0.5f; v6.u0 = 0.0f; v6.v0 = 0.0f; vert_list.push_back(v6);
+    v7.x = -0.5f; v7.y = -0.5f; v7.z = -0.5f; v7.u0 = 1.0f; v7.v0 = 0.0f; vert_list.push_back(v7);
 
     // The cube's faces (not represented by quads, but rather triangles)
     index_list.push_back(1); index_list.push_back(5); index_list.push_back(6); // Right Face Tri 1
@@ -137,6 +139,25 @@ int main(int argc, char **argv) {
     index_list.push_back(2); index_list.push_back(3); index_list.push_back(7); // Bottom Face Tri 1
     index_list.push_back(7); index_list.push_back(6); index_list.push_back(2); // Bottom Face Tri 2
 
+    // Load up image textures 
+    std::vector<unsigned char> buffer, image;
+    LodePNG::Decoder decoder;
+
+    LodePNG::loadFile(buffer, "data/images/brick.png");
+    decoder.decode(image, buffer.empty() ? 0 : &buffer[0], (unsigned)buffer.size());
+
+    GLuint brick_tex, brick_normal_tex;
+    glGenTextures(1, &brick_tex);
+    glBindTexture(GL_TEXTURE_2D, brick_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder.getWidth(), decoder.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image)[0]);
+
+    buffer.clear();
+    image.clear();
+
     // Define some variables for the vao/vbo/shaders
     GLuint vao, vbo_vertices, vbo_indices;
     GLhandleARB shader_program;
@@ -154,6 +175,9 @@ int main(int argc, char **argv) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, x));
 
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, u0));
+
     // Create an index buffer object for the cube, bind it, and populate it with index data
     glGenBuffers(1, &vbo_indices);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
@@ -167,8 +191,8 @@ int main(int argc, char **argv) {
     GLuint frag_shader_id = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
 
     // Load the source for our vert/frag shader
-    const char* vert_shader_source = loadShader("data/shaders/simple_shader.vert");
-    const char* frag_shader_source = loadShader("data/shaders/simple_shader.frag");
+    const char* vert_shader_source = loadShader("data/shaders/texture_shader.vert");
+    const char* frag_shader_source = loadShader("data/shaders/texture_shader.frag");
 
     // Assign the shader source files to the shader objects
     glShaderSource(vert_shader_id, 1, &vert_shader_source, NULL);
@@ -180,6 +204,7 @@ int main(int argc, char **argv) {
 
     // Bind the attribute at position 0 (see line 154) to the "Vertex" name for the vertex shader
     glBindAttribLocation(shader_program, 0, "Vertex");
+    glBindAttribLocation(shader_program, 1, "TexCoord0");
 
     // Bind the first draw buffer to the "FragColor" out variable for the fragment shader
     glBindFragDataLocation(shader_program, GL_DRAW_BUFFER0, "FragColor");
@@ -256,6 +281,13 @@ int main(int argc, char **argv) {
                 false,
                 glm::value_ptr(model_matrix));
 
+        // Active our texture and bind it to the "texture1" variable in the shader
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, brick_tex);
+        glUniform1i(
+                glGetUniformLocation(shader_program, "texture1"),
+                GL_TEXTURE0);
+
         // Make our vertex array active
         glBindVertexArray(vao);
 
@@ -263,7 +295,7 @@ int main(int argc, char **argv) {
         glUseProgramObjectARB(shader_program);
 
         // Render the vao on the screen using "GL_LINE_LOOP"
-        glDrawElements(GL_LINE_LOOP, index_list.size(), GL_UNSIGNED_SHORT, (void*)0);
+        glDrawElements(GL_TRIANGLES, index_list.size(), GL_UNSIGNED_SHORT, (void*)0);
 
         // All the previous rendering was done on a buffer that's not being displayed on the screen.
         // SDL_GL_SwapWindow displays that buffer in our window.
