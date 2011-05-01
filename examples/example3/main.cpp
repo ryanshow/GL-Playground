@@ -139,25 +139,6 @@ int main(int argc, char **argv) {
     index_list.push_back(2); index_list.push_back(3); index_list.push_back(7); // Bottom Face Tri 1
     index_list.push_back(7); index_list.push_back(6); index_list.push_back(2); // Bottom Face Tri 2
 
-    // Load up image textures 
-    std::vector<unsigned char> buffer, image;
-    LodePNG::Decoder decoder;
-
-    LodePNG::loadFile(buffer, "data/images/brick.png");
-    decoder.decode(image, buffer.empty() ? 0 : &buffer[0], (unsigned)buffer.size());
-
-    GLuint brick_tex, brick_normal_tex;
-    glGenTextures(1, &brick_tex);
-    glBindTexture(GL_TEXTURE_2D, brick_tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder.getWidth(), decoder.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image)[0]);
-
-    buffer.clear();
-    image.clear();
-
     // Define some variables for the vao/vbo/shaders
     GLuint vao, vbo_vertices, vbo_indices;
     GLhandleARB shader_program;
@@ -234,6 +215,36 @@ int main(int argc, char **argv) {
     delete [] vert_shader_source;
     delete [] frag_shader_source;
 
+    // Load up image textures 
+    GLuint brick_tex, brick_normal_tex;
+    std::vector<unsigned char> buffer, image;
+    LodePNG::Decoder decoder;
+
+    LodePNG::loadFile(buffer, "data/images/brick.png");
+    decoder.decode(image, buffer.empty() ? 0 : &buffer[0], (unsigned)buffer.size());
+    glGenTextures(1, &brick_tex);
+    glBindTexture(GL_TEXTURE_2D, brick_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder.getWidth(), decoder.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image)[0]);
+
+    buffer.clear();
+    image.clear();
+
+    LodePNG::Decoder decoder2;
+
+    LodePNG::loadFile(buffer, "data/images/brick_normal.png");
+    decoder2.decode(image, buffer.empty() ? 0 : &buffer[0], (unsigned)buffer.size());
+    glGenTextures(1, &brick_normal_tex);
+    glBindTexture(GL_TEXTURE_2D, brick_normal_tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder2.getWidth(), decoder2.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image)[0]);
+
+    buffer.clear();
+    image.clear();
+
+
     // The main game loop
     bool running = true;
     SDL_Event event;
@@ -281,12 +292,14 @@ int main(int argc, char **argv) {
                 false,
                 glm::value_ptr(model_matrix));
 
-        // Active our texture and bind it to the "texture1" variable in the shader
+        // Active our brick texture and bind it to the "texture1" variable in the shader
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, brick_tex);
-        glUniform1i(
-                glGetUniformLocation(shader_program, "texture1"),
-                GL_TEXTURE0);
+        glUniform1i(glGetUniformLocation(shader_program, "rgba_tex"), 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, brick_normal_tex);
+        glUniform1i(glGetUniformLocation(shader_program, "norm_tex"), 1);
 
         // Make our vertex array active
         glBindVertexArray(vao);
