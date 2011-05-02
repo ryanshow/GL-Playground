@@ -10,6 +10,7 @@
 
 #include "lodepng.h"
 
+#include "light.h"
 #include "shader_util.h"
 #include "vertex.h"
 
@@ -244,6 +245,12 @@ int main(int argc, char **argv) {
     buffer.clear();
     image.clear();
 
+    // Create the lights in the scene
+    Light light0;
+    light0.pos[0] = 1.0f; light0.pos[1] = 0.6f; light0.pos[2] = 0.6f;
+    light0.color[0] = 0.9f; light0.color[1] = 1.0f; light0.color[2] = 1.0f; light0.color[3] = 1.0f;
+    light0.intensity = 0.5f;
+
 
     // The main game loop
     bool running = true;
@@ -300,6 +307,10 @@ int main(int argc, char **argv) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, brick_normal_tex);
         glUniform1i(glGetUniformLocation(shader_program, "norm_tex"), 1);
+
+        glUniform3fv(glGetUniformLocation(shader_program, "light0_pos"), 1, glm::value_ptr(light0.pos));
+        glUniform4fv(glGetUniformLocation(shader_program, "light0_col"), 1, glm::value_ptr(light0.color));
+        glUniform1f(glGetUniformLocation(shader_program, "light0_int"), light0.intensity);
 
         // Make our vertex array active
         glBindVertexArray(vao);

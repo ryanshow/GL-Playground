@@ -13,6 +13,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/extern/lodepng/include")
 
 add_subdirectory (extern/glew)
 add_subdirectory (extern/lodepng)
+add_subdirectory (extern/yaml-cpp)
 
 if (WIN32)
     set (PLATFORM_LIBS msvcrt.lib msimg32.lib version.lib winmm.lib imm32.lib)
