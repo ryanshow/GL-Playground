@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
     // Create an index buffer object for the cube, bind it, and populate it with index data
     glGenBuffers(1, &vbo_indices);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo_indices);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Vertex)*index_list.size(), &(index_list)[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)*index_list.size(), &(index_list)[0], GL_STATIC_DRAW);
 
     // Create our shader program
     shader_program = glCreateProgramObjectARB();
