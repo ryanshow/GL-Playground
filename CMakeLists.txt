@@ -10,6 +10,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/common/include")
 include_directories ("${PROJECT_SOURCE_DIR}/extern/glm/include")
 include_directories ("${PROJECT_SOURCE_DIR}/extern/glew/include")
 include_directories ("${PROJECT_SOURCE_DIR}/extern/lodepng/include")
+include_directories ("${PROJECT_SOURCE_DIR}/extern/yaml-cpp/include")
 
 add_subdirectory (extern/glew)
 add_subdirectory (extern/lodepng)

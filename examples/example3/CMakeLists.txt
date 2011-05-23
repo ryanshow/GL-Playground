@@ -8,6 +8,7 @@ target_link_libraries (
     Example3
     GLPlayground
     lodepng
+    yaml-cpp
     ${PLATFORM_LIBS}
     ${SDL_LIBRARY} SDLmain
     ${OPENGL_LIBS}

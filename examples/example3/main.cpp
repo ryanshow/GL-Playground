@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -9,6 +10,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "lodepng.h"
+
+#include "yaml-cpp/yaml.h"
 
 #include "light.h"
 #include "shader_util.h"
@@ -109,36 +112,43 @@ int main(int argc, char **argv) {
     std::vector<Vertex> vert_list;
     std::vector<GLushort> index_list;
 
-    // The cube's vertices
-    Vertex v0, v1, v2, v3, v4, v5, v6, v7;
-    v0.x = -0.5f; v0.y =  0.5f; v0.z =  0.5f; v0.u0 = 0.0f; v0.v0 = 1.0f; vert_list.push_back(v0);
-    v1.x =  0.5f; v1.y =  0.5f; v1.z =  0.5f; v1.u0 = 1.0f; v1.v0 = 1.0f; vert_list.push_back(v1);
-    v2.x =  0.5f; v2.y = -0.5f; v2.z =  0.5f; v2.u0 = 1.0f; v2.v0 = 0.0f; vert_list.push_back(v2);
-    v3.x = -0.5f; v3.y = -0.5f; v3.z =  0.5f; v3.u0 = 0.0f; v3.v0 = 0.0f; vert_list.push_back(v3);
+    // Load up our model file
+    std::ifstream model_file("data/models/cube.yml");
+    YAML::Parser yaml_parser(model_file);
 
-    v4.x = -0.5f; v4.y =  0.5f; v4.z = -0.5f; v4.u0 = 1.0f; v4.v0 = 1.0f; vert_list.push_back(v4);
-    v5.x =  0.5f; v5.y =  0.5f; v5.z = -0.5f; v5.u0 = 0.0f; v5.v0 = 1.0f; vert_list.push_back(v5);
-    v6.x =  0.5f; v6.y = -0.5f; v6.z = -0.5f; v6.u0 = 0.0f; v6.v0 = 0.0f; vert_list.push_back(v6);
-    v7.x = -0.5f; v7.y = -0.5f; v7.z = -0.5f; v7.u0 = 1.0f; v7.v0 = 0.0f; vert_list.push_back(v7);
+    YAML::Node doc;
+    yaml_parser.GetNextDocument(doc);
+    const YAML::Node &mesh = doc["mesh"];
 
-    // The cube's faces (not represented by quads, but rather triangles)
-    index_list.push_back(1); index_list.push_back(5); index_list.push_back(6); // Right Face Tri 1
-    index_list.push_back(6); index_list.push_back(2); index_list.push_back(1); // Right Face Tri 2
+    // Populate vertices (we assume xyz and uv are always there)
+    const YAML::Node &vertices = mesh["vertices"];
+    for (int i=0; i < vertices.size(); i++) {
+        int index;
+        vertices[i]["index"] >> index;
 
-    index_list.push_back(5); index_list.push_back(4); index_list.push_back(7); // Back Face Tri 1
-    index_list.push_back(7); index_list.push_back(6); index_list.push_back(5); // Back Face Tri 2
+        Vertex vert;
+        vertices[i]["pos"][0] >> vert.x;
+        vertices[i]["pos"][1] >> vert.y;
+        vertices[i]["pos"][2] >> vert.z;
+        
+        vertices[i]["tex"][0] >> vert.u0;
+        vertices[i]["tex"][1] >> vert.v0;
 
-    index_list.push_back(4); index_list.push_back(0); index_list.push_back(3); // Left Face Tri 1
-    index_list.push_back(3); index_list.push_back(7); index_list.push_back(4); // Left Face Tri 2
+        vert_list.push_back(vert);
+    }
 
-    index_list.push_back(0); index_list.push_back(4); index_list.push_back(5); // Top Face Tri 1
-    index_list.push_back(5); index_list.push_back(1); index_list.push_back(0); // Top Face Tri 2
+    // Populate the indices (We assume triangles everywhere)
+    const YAML::Node &indices = mesh["indices"];
+    for (int i=0; i < indices.size(); i++) {
+        int i0, i1, i2;
+        indices[i][0] >> i0;
+        indices[i][1] >> i1;
+        indices[i][2] >> i2;
 
-    index_list.push_back(3); index_list.push_back(0); index_list.push_back(1); // Front Face Tri 1
-    index_list.push_back(1); index_list.push_back(2); index_list.push_back(3); // Front Face Tri 2
-
-    index_list.push_back(2); index_list.push_back(3); index_list.push_back(7); // Bottom Face Tri 1
-    index_list.push_back(7); index_list.push_back(6); index_list.push_back(2); // Bottom Face Tri 2
+        index_list.push_back(i0);
+        index_list.push_back(i1);
+        index_list.push_back(i2);
+    }
 
     // Define some variables for the vao/vbo/shaders
     GLuint vao, vbo_vertices, vbo_indices;
