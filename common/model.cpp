@@ -1,4 +1,5 @@
 #include <fstream>
+#include <map>
 
 #include "yaml-cpp/yaml.h"
 
@@ -57,18 +58,35 @@ void Model::fromYAML(const char *filename) {
     }
 }
 
-// Simple vertex getter function
-vector<Vertex> *Model::getVerts() {
-    return &vert_list;
-}
-
-// Simple index getter function
-vector<unsigned int> *Model::getIndices() {
-    return &index_list;
-}
-
 // Erase the contents of this object, essentially making it a blank slate
 void Model::cleanUp() {
+    glUseProgramObjectARB(shader_program);
+
+    //glDisableVertexAttribArray(0);
+
+    std::map<shader_type,GLuint>::iterator shader_map_it;
+    for (shader_map_it = shader_map.begin(); shader_map_it != shader_map.end(); shader_map_it++) {
+        glDetachShader(shader_program, shader_map_it.second);
+        glDeleteShader(shader_map_it.second);
+    }
+    glDeleteProgram(shader_program);
+
+    glDeleteBuffers(buffer_map.size(), &buffer_ids);
+
+    glDeleteVertexArrays(1, &vao);
+
     vert_list.clear();
     index_list.clear();
+    
+    // Delete the textures
+    glDeleteTextures(texture_map.size(), &texture_ids);
+    texture_map.clear();
+    texture_ids = NULL;
+
+    // Delete the shaders
+    std::map<shader_types,GLuint>::iterator shader_map_it;
+    for (shader_map_it=shader_map.begin(); shader_map_it != shader_map.end(); shader_map_it++) {
+        glDeleteShader(shader_map_it.first);
+    }
+    shader_map.clear();
 }
