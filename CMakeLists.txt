@@ -4,7 +4,7 @@ project (GLPlayground)
 
 find_package (SDL REQUIRED)
 
-add_definitions (-DSDL_NO_COMPAT)
+add_definitions (-DSDL_NO_COMPAT -DGLEW_STATIC)
 
 include_directories ("${PROJECT_SOURCE_DIR}/common/include")
 include_directories ("${PROJECT_SOURCE_DIR}/extern/glm/include")
