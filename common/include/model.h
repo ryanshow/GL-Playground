@@ -10,6 +10,7 @@
 
 enum shader_types {VERTEX, FRAGMENT, GEOMETRY};
 enum texture_types {TEX_RGBA_1, TEX_RGBA_2, TEX_RGBA_3, TEX_NORM};
+enum buffer_types {VERTEX_BUFFER, INDEX_BUFFER};
 
 class Model {
     public:
@@ -36,7 +37,6 @@ class Model {
 
     protected:
         void cleanUp();
-
 };
 
 #endif
