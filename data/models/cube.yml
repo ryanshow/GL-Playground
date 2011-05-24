@@ -38,7 +38,7 @@ mesh: &Cube
         - [2, 3, 7]
         - [7, 6, 2]
     shaders:
-        vertex: "simple.vert"
-        fragment: "simple.frag"
-        geometry: "simple.geom"
+        vertex: "texture_shader.vert"
+        fragment: "texture_shader.frag"
+        geometry: "simple_shader.geom"
 

@@ -4,8 +4,9 @@
 
 #include "yaml-cpp/yaml.h"
 
-#include "model.cpp"
-#include "vertex.cpp"
+#include "model.h"
+#include "shader_util.h"
+#include "vertex.h"
 
 // Basic constructor that populates the object contents from a YAML file
 Model::Model(const char *filename) {
@@ -39,9 +40,9 @@ void Model::fromYAML(const char *filename) {
         vertices[i]["pos"][2] >> vert.z;
 
         vertices[i]["tex"][0] >> vert.u0;
-        vertices[i]["tex"][0] >> vert.v0;
+        vertices[i]["tex"][1] >> vert.v0;
 
-        vert_list.push_back(vert);
+        vertex_list.push_back(vert);
     }
 
     // Load in the indices
@@ -61,9 +62,9 @@ void Model::fromYAML(const char *filename) {
     // Load the shader filenames
     const YAML::Node &shaders = mesh["shaders"];
 
-    std::string vert_shader_filename = "simple.vert";
-    std::string frag_shader_filename = "simple.frag";
-    std::string geom_shader_filename = "simple.geom";
+    std::string vert_shader_filename = "simple_shader.vert";
+    std::string frag_shader_filename = "simple_shader.frag";
+    std::string geom_shader_filename = "simple_shader.geom";
 
     if (const YAML::Node *vert_shader = shaders.FindValue("vertex")) {
         *vert_shader >> vert_shader_filename;
@@ -83,11 +84,11 @@ void Model::fromYAML(const char *filename) {
     shader_map[FRAGMENT] = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
 
     // Load the source for the vertex/fragment shaders
-    const char *shader_path = "/data/shaders/";
+    const char *shader_path = "data/shaders/";
 
-    char *vert_shader_fullpath = new char[vert_shader_filename.size()+strlen(path_len)+1];
-    char *frag_shader_fullpath = new char[frag_shader_filename.size()+strlen(path_len)+1];
-    char *geom_shader_fullpath = new char[geom_shader_filename.size()+strlen(path_len)+1];
+    char *vert_shader_fullpath = new char[vert_shader_filename.size()+strlen(shader_path)+1];
+    char *frag_shader_fullpath = new char[frag_shader_filename.size()+strlen(shader_path)+1];
+    char *geom_shader_fullpath = new char[geom_shader_filename.size()+strlen(shader_path)+1];
 
     strcpy(vert_shader_fullpath, shader_path);
     strcat(vert_shader_fullpath, vert_shader_filename.c_str());
@@ -100,8 +101,8 @@ void Model::fromYAML(const char *filename) {
 
     const char *vert_shader_source = loadShader(vert_shader_fullpath);
     const char *frag_shader_source = loadShader(frag_shader_fullpath);
-    const char *geom_shader_source = loadShader(geom_shader_fullpath);
-
+    //const char *geom_shader_source = loadShader(geom_shader_fullpath);
+    
     // Assign the shader source to the shader objects
     glShaderSource(shader_map[VERTEX], 1, &vert_shader_source, NULL);
     glShaderSource(shader_map[FRAGMENT], 1, &frag_shader_source, NULL);
@@ -123,19 +124,45 @@ void Model::fromYAML(const char *filename) {
 
     // Link the shader program to finalize the attachment process
     glLinkProgram(shader_program);
+
+    // Create the Vertex Array Object
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // Create a vertex buffer object for this entity, bind it, and populate it with vertex data
+    glGenBuffers(2, buffer_ids);
+    buffer_map[VERTEX_BUFFER] = buffer_ids[0];
+    buffer_map[INDEX_BUFFER] = buffer_ids[1];
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffer_map[VERTEX_BUFFER]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertex_list.size(), &(vertex_list)[0], GL_STATIC_DRAW);
+
+    // Set up the vertex attribute for the vertex position (xyz)
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, x));
+
+    // Set up the texcoord attribute for the vertex texture position (uv)
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, u0));
+
+    // Create an index buffer object for the cube, bind it, and populate it with index data
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_map[INDEX_BUFFER]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLushort)*index_list.size(), &(index_list)[0], GL_STATIC_DRAW);
+
 }
 
 // Erase the contents of this object, essentially making it a blank slate
 void Model::cleanUp() {
     glUseProgramObjectARB(shader_program);
 
-    //glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 
     // Clean up the shaders
-    std::map<shader_type,GLuint>::iterator shader_map_it;
+    std::map<shader_types,GLuint>::iterator shader_map_it;
     for (shader_map_it = shader_map.begin(); shader_map_it != shader_map.end(); shader_map_it++) {
-        glDetachShader(shader_program, shader_map_it.second);
-        glDeleteShader(shader_map_it.second);
+        glDetachShader(shader_program, shader_map_it->second);
+        glDeleteShader(shader_map_it->second);
     }
     shader_map.clear();
 
@@ -143,17 +170,17 @@ void Model::cleanUp() {
     glDeleteProgram(shader_program);
 
     // Delete our buffer objects
-    glDeleteBuffers(buffer_map.size(), &buffer_ids);
+    glDeleteBuffers(buffer_map.size(), buffer_ids);
 
     // Delete our array objects
     glDeleteVertexArrays(1, &vao);
 
     // Clear the vertex/index vectors
-    vert_list.clear();
+    vertex_list.clear();
     index_list.clear();
     
     // Delete the textures
-    glDeleteTextures(texture_map.size(), &texture_ids);
+    glDeleteTextures(texture_map.size(), texture_ids);
     texture_map.clear();
     texture_ids = NULL;
 }

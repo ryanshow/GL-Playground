@@ -20,7 +20,7 @@ class Model {
         void fromYAML(const char *filename);
 
         std::vector<Vertex> vertex_list;
-        std::vector<unsigned int> index_list;
+        std::vector<GLushort> index_list;
 
         // Shader indices
         GLhandleARB shader_program;

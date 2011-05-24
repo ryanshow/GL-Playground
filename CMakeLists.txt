@@ -36,11 +36,13 @@ set (OPENGL_LIBS ${OPENGL_LIBS} glew)
 set (
     COMMON_SOURCE_FILES
     common/shader_util.cpp
+    common/model.cpp
 )
 
 set (
     COMMON_HEADER_FILES
     common/include/shader_util.h
+    common/include/model.h
 )
 
 file (
