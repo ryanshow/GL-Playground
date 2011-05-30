@@ -116,35 +116,6 @@ int main(int argc, char **argv) {
     // Load up our model file
     Model cube("data/models/cube.yml");
 
-    // Load up image textures 
-    GLuint brick_tex, brick_normal_tex;
-    std::vector<unsigned char> buffer, image;
-    LodePNG::Decoder decoder;
-
-    LodePNG::loadFile(buffer, "data/images/brick.png");
-    decoder.decode(image, buffer.empty() ? 0 : &buffer[0], (unsigned)buffer.size());
-    glGenTextures(1, &brick_tex);
-    glBindTexture(GL_TEXTURE_2D, brick_tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder.getWidth(), decoder.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image)[0]);
-
-    buffer.clear();
-    image.clear();
-
-    LodePNG::Decoder decoder2;
-
-    LodePNG::loadFile(buffer, "data/images/brick_normal.png");
-    decoder2.decode(image, buffer.empty() ? 0 : &buffer[0], (unsigned)buffer.size());
-    glGenTextures(1, &brick_normal_tex);
-    glBindTexture(GL_TEXTURE_2D, brick_normal_tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder2.getWidth(), decoder2.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image)[0]);
-
-    buffer.clear();
-    image.clear();
-
     // Create the lights in the scene
     Light light0;
     light0.pos[0] = 1.0f; light0.pos[1] = 0.6f; light0.pos[2] = 0.6f;
@@ -199,14 +170,13 @@ int main(int argc, char **argv) {
                 false,
                 glm::value_ptr(model_matrix));
 
-        // Active our brick texture and bind it to the "texture1" variable in the shader
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, brick_tex);
-        glUniform1i(glGetUniformLocation(cube.shader_program, "rgba_tex"), 0);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, brick_normal_tex);
-        glUniform1i(glGetUniformLocation(cube.shader_program, "norm_tex"), 1);
+        for (int i=0; i < cube.texture_count; i++) {
+            glActiveTexture(GL_TEXTURE0+i);
+            glBindTexture(GL_TEXTURE_2D, cube.texture_ids[i]);
+            char buffer[20];
+            sprintf(buffer, "texture_%d", i);
+            glUniform1i(glGetUniformLocation(cube.shader_program, buffer), i);
+        }
 
         glUniform3fv(glGetUniformLocation(cube.shader_program, "light0_pos"), 1, glm::value_ptr(light0.pos));
         glUniform4fv(glGetUniformLocation(cube.shader_program, "light0_col"), 1, glm::value_ptr(light0.color));

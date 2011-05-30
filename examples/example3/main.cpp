@@ -183,8 +183,8 @@ int main(int argc, char **argv) {
     GLuint frag_shader_id = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
 
     // Load the source for our vert/frag shader
-    const char* vert_shader_source = loadShader("data/shaders/texture_shader.vert");
-    const char* frag_shader_source = loadShader("data/shaders/texture_shader.frag");
+    const char* vert_shader_source = loadShader("data/shaders/1rgba_norm.vert");
+    const char* frag_shader_source = loadShader("data/shaders/1rgba_norm.frag");
 
     // Assign the shader source files to the shader objects
     glShaderSource(vert_shader_id, 1, &vert_shader_source, NULL);
@@ -312,11 +312,11 @@ int main(int argc, char **argv) {
         // Active our brick texture and bind it to the "texture1" variable in the shader
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, brick_tex);
-        glUniform1i(glGetUniformLocation(shader_program, "rgba_tex"), 0);
+        glUniform1i(glGetUniformLocation(shader_program, "texture_0"), 0);
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, brick_normal_tex);
-        glUniform1i(glGetUniformLocation(shader_program, "norm_tex"), 1);
+        glUniform1i(glGetUniformLocation(shader_program, "texture_1"), 1);
 
         glUniform3fv(glGetUniformLocation(shader_program, "light0_pos"), 1, glm::value_ptr(light0.pos));
         glUniform4fv(glGetUniformLocation(shader_program, "light0_col"), 1, glm::value_ptr(light0.color));

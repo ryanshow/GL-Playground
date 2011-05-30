@@ -2,6 +2,8 @@
 #include <fstream>
 #include <map>
 
+#include "lodepng.h"
+
 #include "yaml-cpp/yaml.h"
 
 #include "model.h"
@@ -17,7 +19,7 @@ Model::Model(const char *filename) {
 void Model::fromYAML(const char *filename) {
 
     // Make sure this object is clean
-    cleanUp();
+    //cleanUp();
 
     // Load up the YAML file
     std::ifstream model_file(filename);
@@ -57,6 +59,36 @@ void Model::fromYAML(const char *filename) {
         index_list.push_back(i0);
         index_list.push_back(i1);
         index_list.push_back(i2);
+    }
+
+    // Load the texture filenames
+    if (const YAML::Node *textures = mesh.FindValue("textures")) {
+        const char *texture_path = "data/images/";
+        texture_count = textures->size();
+        texture_ids = new GLuint[texture_count];
+        glGenTextures(texture_count, texture_ids);
+        for (int i=0; i < texture_count; i++) {
+            std::string texture_filename;
+            (*textures)[i] >> texture_filename;
+
+            char *texture_fullpath = new char[texture_filename.size()+strlen(texture_path)+1];
+            strcpy(texture_fullpath, texture_path);
+            strcat(texture_fullpath, texture_filename.c_str());
+
+            std::vector<unsigned char> buffer, image;
+            LodePNG::Decoder decoder;
+
+            LodePNG::loadFile(buffer, texture_fullpath);
+            decoder.decode(image, buffer.empty() ? 0 : &buffer[0], (unsigned)buffer.size());
+
+            glBindTexture(GL_TEXTURE_2D, texture_ids[i]);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, decoder.getWidth(), decoder.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, &(image)[0]);
+
+            buffer.clear();
+            image.clear();
+        }
     }
 
     // Load the shader filenames
@@ -130,6 +162,7 @@ void Model::fromYAML(const char *filename) {
     glBindVertexArray(vao);
 
     // Create a vertex buffer object for this entity, bind it, and populate it with vertex data
+    buffer_ids = new GLuint[2];
     glGenBuffers(2, buffer_ids);
     buffer_map[VERTEX_BUFFER] = buffer_ids[0];
     buffer_map[INDEX_BUFFER] = buffer_ids[1];
@@ -180,7 +213,6 @@ void Model::cleanUp() {
     index_list.clear();
     
     // Delete the textures
-    glDeleteTextures(texture_map.size(), texture_ids);
-    texture_map.clear();
+    glDeleteTextures(texture_count, texture_ids);
     texture_ids = NULL;
 }

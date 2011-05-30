@@ -9,7 +9,6 @@
 #include "vertex.h"
 
 enum shader_types {VERTEX, FRAGMENT, GEOMETRY};
-enum texture_types {TEX_RGBA_1, TEX_RGBA_2, TEX_RGBA_3, TEX_NORM};
 enum buffer_types {VERTEX_BUFFER, INDEX_BUFFER};
 
 class Model {
@@ -28,7 +27,7 @@ class Model {
 
         // Texture indices
         GLuint *texture_ids;
-        std::map<texture_types,GLuint> texture_map;
+        GLsizei texture_count;
 
         // Buffer/Array Object 
         GLuint vao;

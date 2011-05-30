@@ -38,7 +38,10 @@ mesh: &Cube
         - [2, 3, 7]
         - [7, 6, 2]
     shaders:
-        vertex: "texture_shader.vert"
-        fragment: "texture_shader.frag"
-        geometry: "simple_shader.geom"
+        vertex: "1rgba_norm.vert"
+        fragment: "1rgba_norm.frag"
+        geometry: "default.geom"
+    textures:
+        - "brick.png"
+        - "brick_norm.png"
 
